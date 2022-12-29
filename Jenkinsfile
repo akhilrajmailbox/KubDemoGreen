@@ -1,23 +1,30 @@
 def DEPLOYMENT_ERR = ""
 def MY_NODE_LABEL = "SLAVES"
+def DOCKER_IMAGE_NAME = "akhilrajmailbox/httpd-demo"
 
 try {
     node (label: "${MY_NODE_LABEL}") {
         stage('Checkout SCM') {
             checkout scm
+            RELEASE_SHA = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
         }
         stage('Creating Docker image') {
+            def dockerCredID = "DockerCreds"
+            def dockerRegistry = ""
             def imageContext = "Docker"
-            def dockerImgName = "httpd-demo"
-            def dockerImgTag = "${env.BUILD_NUMBER}"
             def dockerFile = "Dockerfile"
+            DOCKER_IMAGE_TAG = "${env.BUILD_NUMBER}.${RELEASE_SHA}"
             dir("${imageContext}") {
-                myImage = docker.build("${dockerImgName}:${dockerImgTag}", "-f ${dockerFile} .")
+                myImage = docker.build("${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}", "-f ${dockerFile} .")
+            }
+            docker.withRegistry("${dockerRegistry}", "${dockerCredID}") {
+                myImage = docker.image("${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}")
+                myImage.push()
             }
         }
         stage('Updating Deployment Snippet'){
             def K8S_NAMESPACE = "${env.BRANCH_NAME}"
-            def SVC_IMG_NAME = "httpd-demo:${env.BUILD_NUMBER}"
+            def SVC_IMG_NAME = "${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}"
             def fileName = "K8s/Deployment.yml"
             def theFileExists = fileExists fileName
             if (theFileExists) {
@@ -30,13 +37,43 @@ try {
                 error("${fileName} not found..!")
             }
         }
-        stage('Deploy to Kubernetes'){
+        stage('Cleanup Process') {
             def K8S_NAMESPACE = "${env.BRANCH_NAME}"
             def fileName = "K8s/Deployment.yml"
             def theFileExists = fileExists fileName
             if (theFileExists) {
                 sh """
-                    kubectl create ns ${K8S_NAMESPACE}
+                    docker rmi -f \$(docker images -aq) || echo "Not found"
+                    sleep 5
+                    kubectl delete -f ${fileName} || echo "Not found"
+                    sleep 5
+                    kubectl delete ns ${K8S_NAMESPACE} || echo "Not found"
+                    sleep 5
+                """
+            } else {
+                error("${fileName} not found..!")
+            }
+        }
+        stage('Setting up Namespace') {
+            def K8S_NAMESPACE = "${env.BRANCH_NAME}"
+            def fileName = "K8s/Namespace.yml"
+            def theFileExists = fileExists fileName
+            if (theFileExists) {
+                sh """
+                    sed -i "s|K8S_NAMESPACE_VALUE|${K8S_NAMESPACE}|g" ${fileName}
+                    cat ${fileName}
+                    kubectl apply -f ${fileName}
+                    sleep 5
+                """
+            } else {
+                error("${fileName} not found..!")
+            }       
+        }
+        stage('Deploy to Kubernetes'){
+            def fileName = "K8s/Deployment.yml"
+            def theFileExists = fileExists fileName
+            if (theFileExists) {
+                sh """
                     kubectl apply -f ${fileName}
                 """
             } else {
