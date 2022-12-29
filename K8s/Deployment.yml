@@ -32,7 +32,7 @@ spec:
               topologyKey: "kubernetes.io/hostname"
       containers:
       - name: httpd
-        imagePullPolicy: Always
+        # imagePullPolicy: Always
         image: SVC_IMG_NAME_VALUE
         env:
         - name: NAMESPACE
@@ -76,9 +76,10 @@ metadata:
 spec:
   ports:
   - name: http
+    nodePort: 80
     port: 80
     targetPort: 80
     protocol: TCP
-  type: ClusterIP
+  type: NodePort
   selector:
     component: httpd
