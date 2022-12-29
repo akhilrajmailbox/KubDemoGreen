@@ -45,6 +45,8 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
+        - name: RELEASE_VERSION
+          value: RELEASE_VERSION_VALUE
         resources:
           requests:
             memory: "256Mi"

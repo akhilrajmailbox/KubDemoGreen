@@ -31,6 +31,7 @@ try {
                 sh """
                     sed -i "s|K8S_NAMESPACE_VALUE|${K8S_NAMESPACE}|g" ${fileName}
                     sed -i "s|SVC_IMG_NAME_VALUE|${SVC_IMG_NAME}|g" ${fileName}
+                    sed -i "s|RELEASE_VERSION_VALUE|${DOCKER_IMAGE_TAG}|g" ${fileName}
                     cat ${fileName}
                 """
             } else {
@@ -75,6 +76,7 @@ try {
             if (theFileExists) {
                 sh """
                     kubectl apply -f ${fileName}
+                    sleep 10
                 """
             } else {
                 error("${fileName} not found..!")
