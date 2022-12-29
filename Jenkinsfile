@@ -16,15 +16,28 @@ try {
             }
         }
         stage('Updating Deployment Snippet'){
-            def fileName = "K8s/Deployment.yml"
             def K8S_NAMESPACE = "${env.BRANCH_NAME}"
             def SVC_IMG_NAME = "httpd-demo:${env.BUILD_NUMBER}"
+            def fileName = "K8s/Deployment.yml"
             def theFileExists = fileExists fileName
             if (theFileExists) {
                 sh """
                     sed -i "s|K8S_NAMESPACE_VALUE|${K8S_NAMESPACE}|g" ${fileName}
                     sed -i "s|SVC_IMG_NAME_VALUE|${SVC_IMG_NAME}|g" ${fileName}
                     cat ${fileName}
+                """
+            } else {
+                error("${fileName} not found..!")
+            }
+        }
+        stage('Deploy to Kubernetes'){
+            def K8S_NAMESPACE = "${env.BRANCH_NAME}"
+            def fileName = "K8s/Deployment.yml"
+            def theFileExists = fileExists fileName
+            if (theFileExists) {
+                sh """
+                    kubectl create ns ${K8S_NAMESPACE}
+                    kubectl apply -f ${fileName}
                 """
             } else {
                 error("${fileName} not found..!")
