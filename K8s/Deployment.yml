@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpd-ds
+  namespace: K8S_NAMESPACE_VALUE
+  labels:
+    component: httpd
+    role: demo-svc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: httpd
+      role: demo-svc
+  template:
+    metadata:
+      labels:
+        component: httpd
+        role: demo-svc
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: component
+                  operator: In
+                  values:
+                  - httpd
+              topologyKey: "kubernetes.io/hostname"
+      containers:
+      - name: httpd
+        imagePullPolicy: Always
+        image: SVC_IMG_NAME_VALUE
+        env:
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: DEPLOY_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        ports:
+        - containerPort: 80
+          name: http
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+      restartPolicy: Always
+status: {}
