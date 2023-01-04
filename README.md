@@ -1,5 +1,5 @@
-# K8sDemoGreen
-K8sDemoGreen with CICD
+# KubDemoGreen
+KubDemoGreen with CICD
 
 ## Nginx Ingress
 

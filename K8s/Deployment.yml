@@ -47,6 +47,8 @@ spec:
               fieldPath: metadata.name
         - name: RELEASE_VERSION
           value: RELEASE_VERSION_VALUE
+        - name: REPO_BRANCH_NAME
+          value: REPO_BRANCH_NAME_VALUE
         - name: MODULE_NAME
           value: MODULE_NAME_VALUE
         resources:
@@ -119,7 +121,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: K8S_NAMESPACE_VALUE.growfast.co.in
+  - host: K8S_NAMESPACE_VALUE-green.growfast.co.in
     http:
       paths:
       - pathType: Prefix
