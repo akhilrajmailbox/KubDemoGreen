@@ -23,6 +23,8 @@ try {
             }
         }
         stage('Updating Deployment Snippet'){
+            def MODULE_NAME = sh(script: "echo ${JOB_NAME} | awk -F '/${BRANCH_NAME}' '{print \$1}'", returnStdout: true).trim()
+            def MODULE_NAME_LOWER = MODULE_NAME.toLowerCase()
             def K8S_NAMESPACE = "${env.BRANCH_NAME}"
             def SVC_IMG_NAME = "${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}"
             def fileName = "K8s/Deployment.yml"
@@ -32,6 +34,7 @@ try {
                     sed -i "s|K8S_NAMESPACE_VALUE|${K8S_NAMESPACE}|g" ${fileName}
                     sed -i "s|SVC_IMG_NAME_VALUE|${SVC_IMG_NAME}|g" ${fileName}
                     sed -i "s|RELEASE_VERSION_VALUE|${DOCKER_IMAGE_TAG}|g" ${fileName}
+                    sed -i "s|MODULE_NAME_VALUE|${MODULE_NAME_LOWER}|g" ${fileName}
                     cat ${fileName}
                 """
             } else {

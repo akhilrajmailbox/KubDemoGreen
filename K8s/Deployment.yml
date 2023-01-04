@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: httpd-ds
+  name: MODULE_NAME_VALUE-ds
   namespace: K8S_NAMESPACE_VALUE
   labels:
-    component: httpd
+    component: MODULE_NAME_VALUE
     role: demo-svc
 spec:
   replicas: 1
   selector:
     matchLabels:
-      component: httpd
+      component: MODULE_NAME_VALUE
       role: demo-svc
   template:
     metadata:
       labels:
-        component: httpd
+        component: MODULE_NAME_VALUE
         role: demo-svc
     spec:
       affinity:
@@ -28,10 +28,10 @@ spec:
                 - key: component
                   operator: In
                   values:
-                  - httpd
+                  - MODULE_NAME_VALUE
               topologyKey: "kubernetes.io/hostname"
       containers:
-      - name: httpd
+      - name: MODULE_NAME_VALUE
         imagePullPolicy: Always
         # imagePullSecrets:
         #   - name: myCustomSecret
@@ -47,13 +47,15 @@ spec:
               fieldPath: metadata.name
         - name: RELEASE_VERSION
           value: RELEASE_VERSION_VALUE
+        - name: MODULE_NAME
+          value: MODULE_NAME_VALUE
         resources:
           requests:
-            memory: "256Mi"
-            cpu: "250m"
+            memory: "100Mi"
+            cpu: "50m"
           limits:
-            memory: "1Gi"
-            cpu: "500m"
+            memory: "500Mi"
+            cpu: "200m"
         ports:
         - containerPort: 80
           name: http
@@ -72,10 +74,10 @@ status: {}
 # apiVersion: v1
 # kind: Service
 # metadata:
-#   name: httpd-service
+#   name: MODULE_NAME_VALUE-service
 #   namespace: K8S_NAMESPACE_VALUE
 #   labels:
-#     component: httpd
+#     component: MODULE_NAME_VALUE
 #     role: demo-svc
 # spec:
 #   ports:
@@ -86,15 +88,15 @@ status: {}
 #     protocol: TCP
 #   type: NodePort
 #   selector:
-#     component: httpd
+#     component: MODULE_NAME_VALUE
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: httpd-service
+  name: MODULE_NAME_VALUE-service
   namespace: K8S_NAMESPACE_VALUE
   labels:
-    component: httpd
+    component: MODULE_NAME_VALUE
     role: demo-svc
 spec:
   ports:
@@ -104,15 +106,15 @@ spec:
     protocol: TCP
   type: ClusterIP
   selector:
-    component: httpd
+    component: MODULE_NAME_VALUE
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: httpd-ing
+  name: MODULE_NAME_VALUE-ing
   namespace: K8S_NAMESPACE_VALUE
   labels:
-    component: httpd
+    component: MODULE_NAME_VALUE
     role: demo-ing
 spec:
   ingressClassName: nginx
@@ -124,6 +126,6 @@ spec:
         path: "/"
         backend:
           service:
-            name: httpd-service
+            name: MODULE_NAME_VALUE-service
             port:
               number: 80
