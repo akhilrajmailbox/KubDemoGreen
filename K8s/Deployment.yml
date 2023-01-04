@@ -68,6 +68,25 @@ spec:
             port: 80
       restartPolicy: Always
 status: {}
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: httpd-service
+#   namespace: K8S_NAMESPACE_VALUE
+#   labels:
+#     component: httpd
+#     role: demo-svc
+# spec:
+#   ports:
+#   - name: http
+#     nodePort: 30004
+#     port: 80
+#     targetPort: 80
+#     protocol: TCP
+#   type: NodePort
+#   selector:
+#     component: httpd
 ---
 apiVersion: v1
 kind: Service
@@ -80,10 +99,31 @@ metadata:
 spec:
   ports:
   - name: http
-    nodePort: 30004
     port: 80
     targetPort: 80
     protocol: TCP
-  type: NodePort
+  type: ClusterIP
   selector:
     component: httpd
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: httpd-ing
+  namespace: K8S_NAMESPACE_VALUE
+  labels:
+    component: httpd
+    role: demo-ing
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: K8S_NAMESPACE_VALUE.growfast.co.in
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: httpd-service
+            port:
+              number: 80
